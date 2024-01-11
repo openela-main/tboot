@@ -1,0 +1,20 @@
+# HG changeset patch
+# User Pawel Randzio <pawel.randzio@intel.com>
+# Date 1646837604 -3600
+#      Wed Mar 09 15:53:24 2022 +0100
+# Node ID 9cda8c127b0a7bb11561befbaa9ecf1130763fcf
+# Parent  5941842afb661f0e78085cb1317781d362583a38
+Fixed a typo in man page for lcp2_crtpollist
+
+diff -r 5941842afb66 -r 9cda8c127b0a docs/man/lcp2_crtpollist.8
+--- a/docs/man/lcp2_crtpollist.8	Fri Mar 04 11:14:35 2022 +0100
++++ b/docs/man/lcp2_crtpollist.8	Wed Mar 09 15:53:24 2022 +0100
+@@ -36,7 +36,7 @@
+ support rsapss and ecdsa.
+ .TP \w'\fB--hashalg\ \fI<sha1|sha256|sha384|sha512|sm2>\fP'u+1n
+ \fB--hashalg\ \fI<sha1|sha256|sha384|sha512|sm2>\fP
+-Hash algorightm used for signing a list. Lists version 0x100 only support SHA1.
++Hash algorithm used for signing a list. Lists version 0x100 only support SHA1.
+ .TP
+ \fB--pub\ \fIfile\fP
+ Public key to use, must be in PEM format.

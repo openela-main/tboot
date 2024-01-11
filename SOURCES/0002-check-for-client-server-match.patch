@@ -1,0 +1,133 @@
+# HG changeset patch
+# User Timo Lindfors <timo.lindfors@iki.fi>
+# Date 1646900891 -7200
+#      Thu Mar 10 10:28:11 2022 +0200
+# Node ID 9c625ab2035bae1fc38787025f74d2937600223b
+# Parent  9cda8c127b0a7bb11561befbaa9ecf1130763fcf
+txt-acminfo: Map TXT heap using mmap
+Without this patch
+
+txt-acminfo 5th_gen_i5_i7_SINIT_79.BIN
+
+segfaults. This issue was introduced in
+
+o  changeset:   627:d8a8e17f6d41
+|  user:        Lukasz Hawrylko <lukas...@in...>
+|  date:        Thu May 13 16:04:27 2021 +0200
+|  summary:     Check for client/server match when selecting SINIT
+
+Signed-off-by: Timo Lindfors <timo.lindfors@iki.fi>
+
+diff -r 9cda8c127b0a -r 9c625ab2035b tboot/common/loader.c
+--- a/tboot/common/loader.c	Wed Mar 09 15:53:24 2022 +0100
++++ b/tboot/common/loader.c	Thu Mar 10 10:28:11 2022 +0200
+@@ -1792,7 +1792,7 @@
+         void *base2 = (void *)m->mod_start;
+         uint32_t size2 = m->mod_end - (unsigned long)(base2);
+         if ( is_racm_acmod(base2, size2, false) &&
+-             does_acmod_match_platform((acm_hdr_t *)base2) ) {
++             does_acmod_match_platform((acm_hdr_t *)base2, NULL) ) {
+             if ( base != NULL )
+                 *base = base2;
+             if ( size != NULL )
+@@ -1837,7 +1837,7 @@
+         void *base2 = (void *)m->mod_start;
+         uint32_t size2 = m->mod_end - (unsigned long)(base2);
+         if ( is_sinit_acmod(base2, size2, false) &&
+-             does_acmod_match_platform((acm_hdr_t *)base2) ) {
++             does_acmod_match_platform((acm_hdr_t *)base2, NULL) ) {
+             if ( base != NULL )
+                 *base = base2;
+             if ( size != NULL )
+diff -r 9cda8c127b0a -r 9c625ab2035b tboot/include/txt/acmod.h
+--- a/tboot/include/txt/acmod.h	Wed Mar 09 15:53:24 2022 +0100
++++ b/tboot/include/txt/acmod.h	Thu Mar 10 10:28:11 2022 +0200
+@@ -37,6 +37,8 @@
+ #ifndef __TXT_ACMOD_H__
+ #define __TXT_ACMOD_H__
+ 
++typedef void   txt_heap_t;
++
+ /*
+  * authenticated code (AC) module header (ver 0.0)
+  */
+@@ -179,7 +181,7 @@
+ extern acm_hdr_t *copy_racm(const acm_hdr_t *racm);
+ extern bool verify_racm(const acm_hdr_t *acm_hdr);
+ extern bool is_sinit_acmod(const void *acmod_base, uint32_t acmod_size, bool quiet);
+-extern bool does_acmod_match_platform(const acm_hdr_t* hdr);
++extern bool does_acmod_match_platform(const acm_hdr_t* hdr, const txt_heap_t* txt_heap);
+ extern acm_hdr_t *copy_sinit(const acm_hdr_t *sinit);
+ extern bool verify_acmod(const acm_hdr_t *acm_hdr);
+ extern uint32_t get_supported_os_sinit_data_ver(const acm_hdr_t* hdr);
+diff -r 9cda8c127b0a -r 9c625ab2035b tboot/txt/acmod.c
+--- a/tboot/txt/acmod.c	Wed Mar 09 15:53:24 2022 +0100
++++ b/tboot/txt/acmod.c	Thu Mar 10 10:28:11 2022 +0200
+@@ -576,7 +576,7 @@
+     return true;
+ }
+ 
+-bool does_acmod_match_platform(const acm_hdr_t* hdr)
++bool does_acmod_match_platform(const acm_hdr_t* hdr, const txt_heap_t *txt_heap)
+ {
+     /* used to ensure we don't print chipset/proc info for each module */
+     static bool printed_host_info;
+@@ -587,7 +587,8 @@
+         return false;
+ 
+     /* verify client/server platform match */
+-    txt_heap_t *txt_heap = get_txt_heap();
++    if (txt_heap == NULL)
++        txt_heap = get_txt_heap();
+     bios_data_t *bios_data = get_bios_data_start(txt_heap);
+     if (info_table->version >= 5 && bios_data->version >= 6) {
+         uint32_t bios_type = bios_data->flags.bits.mle.platform_type;
+@@ -713,7 +714,7 @@
+ 
+     /* is it a valid SINIT module? */
+     if ( !is_sinit_acmod(sinit_region_base, bios_data->bios_sinit_size, false) ||
+-         !does_acmod_match_platform((acm_hdr_t *)sinit_region_base) )
++         !does_acmod_match_platform((acm_hdr_t *)sinit_region_base, NULL) )
+         return NULL;
+ 
+     return (acm_hdr_t *)sinit_region_base;
+diff -r 9cda8c127b0a -r 9c625ab2035b utils/txt-acminfo.c
+--- a/utils/txt-acminfo.c	Wed Mar 09 15:53:24 2022 +0100
++++ b/utils/txt-acminfo.c	Thu Mar 10 10:28:11 2022 +0200
+@@ -203,15 +203,31 @@
+         close(fd_mem);
+         return false;
+     }
+-    else {
+-        if ( does_acmod_match_platform(hdr) )
+-            printf("ACM matches platform\n");
+-        else
+-            printf("ACM does not match platform\n");
+ 
++    uint64_t txt_heap_size = *(volatile uint64_t *)(pub_config_base + TXTCR_HEAP_SIZE);
++    if (txt_heap_size == 0) {
++        printf("ERROR: No TXT heap is available\n");
+         munmap(pub_config_base, TXT_CONFIG_REGS_SIZE);
++        close(fd_mem);
++        return false;
+     }
+ 
++    uint64_t txt_heap_base = *(volatile uint64_t *)(pub_config_base + TXTCR_HEAP_BASE);
++    txt_heap_t *txt_heap = mmap(NULL, txt_heap_size, PROT_READ, MAP_PRIVATE,
++                                fd_mem, txt_heap_base);
++    if ( txt_heap == MAP_FAILED ) {
++        printf("ERROR: cannot map TXT heap by mmap()\n");
++        munmap(pub_config_base, TXT_CONFIG_REGS_SIZE);
++        close(fd_mem);
++        return false;
++    }
++    if ( does_acmod_match_platform(hdr, txt_heap) )
++        printf("ACM matches platform\n");
++    else
++        printf("ACM does not match platform\n");
++
++    munmap(txt_heap, txt_heap_size);
++    munmap(pub_config_base, TXT_CONFIG_REGS_SIZE);
+     close(fd_mem);
+     return true;
+ }
