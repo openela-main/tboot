@@ -1,15 +1,12 @@
 Summary:        Performs a verified launch using Intel TXT
 Name:           tboot
-Version:        1.10.5
-Release:        2%{?dist}
+Version:        1.11.3
+Release:        1%{?dist}
 Epoch:          1
 
 License:        BSD
 URL:            http://sourceforge.net/projects/tboot/
 Source0:        http://downloads.sourceforge.net/%{name}/%{name}-%{version}.tar.gz
-
-Patch01: 0001-fix-typo-in-lcp2_crtpollist-manpage.patch
-Patch02: 0002-check-for-client-server-match.patch
 
 BuildRequires:  make
 BuildRequires:  gcc
@@ -95,6 +92,18 @@ make debug=y DISTDIR=$RPM_BUILD_ROOT install
 /boot/tboot-syms
 
 %changelog
+* Thu Apr 25 2024 Tony Camuso <tcamuso@redhat.com> - 1:1.11.3-1
+  Rebase to upstream 1.11.3 and bump the NVR.
+  Resolves: RHEL-34941
+
+* Wed Nov 08 2023 Tony Camuso <tcamuso@redhat.com> - 1:1.11.1-2
+- Rebase to upstream 1.11.2 and bump the NVR.
+  Resolves: RHEL-16022
+
+* Wed Apr 12 2023 Tony Camuso <tcamuso@redhat.com> - 1:1.11.1-1
+- Backport upstream fixes and updates.
+  Resolves: rhbz#2186308
+
 * Thu Aug 18 2022 Tony Camuso <tcamuso@redhat.com> - 1:1.10.5-2
 - The install scriptlet in %post was choosing the first grub.cfg
   file it encountered, which was /boot/efi/EFI/redhat/grub.cfg.
