@@ -1,6 +1,6 @@
 Summary:        Performs a verified launch using Intel TXT
 Name:           tboot
-Version:        1.11.3
+Version:        1.11.9
 Release:        1%{?dist}
 Epoch:          1
 
@@ -92,6 +92,10 @@ make debug=y DISTDIR=$RPM_BUILD_ROOT install
 /boot/tboot-syms
 
 %changelog
+* Tue Nov 19 2024 Tony Camuso <tcamuso@redhat.com> - 1:1.11.9-1
+  Rebase to upstream 1.11.9 and bump the nvr
+  Resolves: RHEL-67949
+
 * Thu Apr 25 2024 Tony Camuso <tcamuso@redhat.com> - 1:1.11.3-1
   Rebase to upstream 1.11.3 and bump the NVR.
   Resolves: RHEL-34941
