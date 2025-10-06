@@ -1,0 +1,57 @@
+diff -up tboot-1.11.3/lcptools-v2/crtpol.c.no-engine tboot-1.11.3/lcptools-v2/crtpol.c
+--- tboot-1.11.3/lcptools-v2/crtpol.c.no-engine	2024-08-13 18:03:43.003697657 +0200
++++ tboot-1.11.3/lcptools-v2/crtpol.c	2024-08-13 18:04:49.315001612 +0200
+@@ -43,7 +43,10 @@
+ #include <errno.h>
+ #include <string.h>
+ #include <openssl/rsa.h>
++#include <openssl/opensslconf.h>
++#ifndef OPENSSL_NO_ENGINE
+ #include <openssl/engine.h>
++#endif
+ #include <openssl/pem.h>
+ #include <openssl/err.h>
+ #include <openssl/bn.h>
+diff -up tboot-1.11.3/lcptools-v2/crtpollist.c.no-engine tboot-1.11.3/lcptools-v2/crtpollist.c
+--- tboot-1.11.3/lcptools-v2/crtpollist.c.no-engine	2024-08-13 18:03:43.005697697 +0200
++++ tboot-1.11.3/lcptools-v2/crtpollist.c	2024-08-13 18:04:58.324178771 +0200
+@@ -44,7 +44,10 @@
+ #include <errno.h>
+ #include <string.h>
+ #include <openssl/rsa.h>
++#include <openssl/opensslconf.h>
++#ifndef OPENSSL_NO_ENGINE
+ #include <openssl/engine.h>
++#endif
+ #include <openssl/pem.h>
+ #include <openssl/err.h>
+ #include <openssl/bn.h>
+diff -up tboot-1.11.3/lcptools-v2/lcputils.c.no-engine tboot-1.11.3/lcptools-v2/lcputils.c
+--- tboot-1.11.3/lcptools-v2/lcputils.c.no-engine	2024-08-13 18:03:43.004697677 +0200
++++ tboot-1.11.3/lcptools-v2/lcputils.c	2024-08-13 18:04:53.293079838 +0200
+@@ -43,7 +43,10 @@
+ #include <errno.h>
+ #include <string.h>
+ #include <openssl/rsa.h>
++#include <openssl/opensslconf.h>
++#ifndef OPENSSL_NO_ENGINE
+ #include <openssl/engine.h>
++#endif
+ #include <openssl/pem.h>
+ #include <openssl/err.h>
+ #include <openssl/bn.h>
+diff -up tboot-1.11.3/lcptools-v2/pollist2.c.no-engine tboot-1.11.3/lcptools-v2/pollist2.c
+--- tboot-1.11.3/lcptools-v2/pollist2.c.no-engine	2024-08-13 18:03:43.002697637 +0200
++++ tboot-1.11.3/lcptools-v2/pollist2.c	2024-08-13 18:04:45.813932767 +0200
+@@ -41,7 +41,10 @@
+ #include <string.h>
+ #include <safe_lib.h>
+ #include <openssl/rsa.h>
++#include <openssl/opensslconf.h>
++#ifndef OPENSSL_NO_ENGINE
+ #include <openssl/engine.h>
++#endif
+ #include <openssl/pem.h>
+ #include <openssl/err.h>
+ #include <openssl/bn.h>
+
